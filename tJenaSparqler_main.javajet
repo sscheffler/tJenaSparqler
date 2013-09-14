@@ -1,0 +1,48 @@
+<%@ jet 
+imports="
+    org.talend.core.model.process.INode 
+    org.talend.designer.codegen.config.CodeGeneratorArgument
+    org.talend.core.model.process.ElementParameterParser
+    org.talend.core.model.metadata.IMetadataTable
+    org.talend.core.model.metadata.IMetadataColumn 
+    org.talend.core.model.process.IConnection
+    java.util.List
+"
+%>
+<%
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String ont = ElementParameterParser.getValue(node, "__QUERY__");
+	
+	Boolean use_query=new Boolean(ElementParameterParser.getValue(node, "__USE_QUERY__"));
+	Boolean use_update=new Boolean(ElementParameterParser.getValue(node, "__USE_UPDATE__"));
+String outConnName = null;
+
+if(use_query){
+	List<? extends IConnection> outConns = node.getOutgoingConnections();
+	
+	
+	for(IConnection con : outConns){
+		String connectorName = con.getConnectorName();
+		String name=con.getName();
+		if(connectorName.equals("FLOW")){
+		
+		for(IMetadataColumn column : con.getMetadataTable().getListColumns()){
+			String columnLabel= column.getLabel();
+			String columnId= column.getId();
+		%>
+			String result_<%=cid%>_<%=columnId%>_String = (String)resultMap_<%=cid%>.get("<%=columnLabel%>");
+			if(result_<%=cid%>_<%=columnId%>_String==null){
+				<%=name%>.<%=columnLabel%>=null;
+			}else{
+				<%=name%>.<%=columnLabel%>= result_<%=cid%>_<%=columnId%>_String;
+			}
+			
+		<%	
+			}
+			break;
+		}
+}}if(use_update){%>
+	
+<%}%>

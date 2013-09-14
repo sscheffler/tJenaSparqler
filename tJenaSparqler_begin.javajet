@@ -1,0 +1,65 @@
+<%@ jet 
+imports="
+    org.talend.core.model.process.INode 
+    org.talend.designer.codegen.config.CodeGeneratorArgument
+    org.talend.core.model.process.ElementParameterParser 
+"
+%>
+<%@ include file="../templates/semantic_web/jena/JenaQueryUtils.javajet"%>
+
+<%
+	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+	INode node = (INode)codeGenArgument.getArgument();
+	String cid = node.getUniqueName();
+	String queryString = ElementParameterParser.getValue(node, "__QUERY__");
+	
+	String connectionName="";
+	String hostConnectionName="";
+	String nameSpaceStringName ="";
+	String virtuosoGraphName ="";
+	connectionName="connection_"+ElementParameterParser.getValue(node, "__JENA_CONNECTION__");
+	
+	Integer offset= new Integer(ElementParameterParser.getValue(node, "__OFFSET__"));
+	Boolean use_query=new Boolean(ElementParameterParser.getValue(node, "__USE_QUERY__"));
+	Boolean use_update=new Boolean(ElementParameterParser.getValue(node, "__USE_UPDATE__"));
+	Boolean use_offset=new Boolean(ElementParameterParser.getValue(node, "__USE_OFFSET_CHECK__"));
+	Boolean use_nsMap=new Boolean(ElementParameterParser.getValue(node, "__USE_GLOBALNAMESPACEMAP_CHECK__"));
+	Boolean logging=new Boolean(ElementParameterParser.getValue(node, "__LOGGING__"));
+	JenaQueryUtils jenaQueryUtil = new JenaQueryUtils(node);
+	boolean use_fuseki=true;
+	%>
+	
+	de.crawling.spider.talend.components.jena.connection.IConnection connection_<%=cid%>= 
+		(de.crawling.spider.talend.components.jena.connection.IConnection)globalMap.get("<%=connectionName%>");
+	connection_<%=cid%>.addLogger("<%=cid%>",<%=logging%>);
+	connection_<%=cid%>.setLogging(<%=logging%>,"<%=cid%>");	
+		
+	String nameSpaces_<%=cid%> = "";
+	
+	<%if(use_nsMap){%>
+		nameSpaces_<%=cid%>=connection_<%=cid%>.getConnector().getPrefixMappingString();
+	<%}%>
+	
+	String fullQueryString_<%=cid%> = nameSpaces_<%=cid%>+" "+<%=jenaQueryUtil.getNormalizedSparqlString()%>;
+	java.util.List<java.util.Map<String,Object>> resultList_<%=cid%> = null;
+	
+	int limit_<%=cid%>=<%=offset%>;
+	int offset_<%=cid%> = 0;
+		<%if(use_query){%>
+    		<%if(use_offset){%>
+    			while(true){
+	    			String newQString_<%=cid%> = fullQueryString_<%=cid%> + " OFFSET " +offset_<%=cid%>+ " LIMIT " + limit_<%=cid%>;
+	    			resultList_<%=cid%> = connection_<%=cid%>.executeQuery(newQString_<%=cid%>,"<%=cid%>");
+	    			if(resultList_<%=cid%>.size()==0){
+	    				break;
+	    			}
+	    	<%}else{%>
+    		resultList_<%=cid%> = connection_<%=cid%>.executeQuery(fullQueryString_<%=cid%>,"<%=cid%>");
+		<%}%>	
+			for(java.util.Map<String, Object> resultMap_<%=cid%> : resultList_<%=cid%>)
+			{
+			
+	
+		//only for fuseki relevant
+		<%} if(use_update){%>		    <%}%>
+				    
